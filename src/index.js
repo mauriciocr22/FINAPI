@@ -8,10 +8,10 @@ app.use(express.json());
 const customers = [];
 
 function verifyIfAccountCPFExists(request, response, next) {
-  const { cpf } = request.params;
+  const { cpf } = request.headers;
 
   const customer = customers.find(
-    customer => customer.cpf === cpf
+    (customer) => customer.cpf === cpf
   );
 
   if(!customer) {
@@ -43,9 +43,28 @@ app.post('/account', (request, response) => {
   return response.status(201).send();
 });
 
-app.get('/statement/:cpf', verifyIfAccountCPFExists, (request, response) => {
+app.get('/statement', verifyIfAccountCPFExists, (request, response) => {
   const { customer } = request;
   return response.json(customer.statement);
 });
+
+app.post('/deposit', verifyIfAccountCPFExists, (request, response) => {
+  const { description, amount } = request.body;
+
+  const { customer } = request;
+
+  console.log(customer);
+
+  const statementOperation = {
+    description,
+    amount,
+    created_at: new Date(),
+    type: "credit"
+  }
+
+  customer.statement.push(statementOperation);
+
+  return response.status(201).send();
+})
 
 app.listen(3333);
